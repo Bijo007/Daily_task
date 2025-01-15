@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .date {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+            text-align: left;
+        }
+        .add-task {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .add-task input, .add-task button {
+            padding: 10px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Tasker</h1>
+        <div class="date" id="currentDate"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="taskList">
+                <!-- Tasks will be added here dynamically -->
+            </tbody>
+        </table>
+        <div class="add-task">
+            <input type="text" id="taskInput" placeholder="Enter task">
+            <input type="time" id="timeInput">
+            <select id="statusInput">
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+            </select>
+            <button onclick="addTask()">Add Task</button>
+        </div>
+        <div class="total-time">
+            <h3>Total Time: <span id="totalTime">0:00</span></h3>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            updateDate();
+        });
+
+        function updateDate() {
+            const currentDate = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').innerText = currentDate.toLocaleDateString('en-US', options);
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput').value;
+            const timeInput = document.getElementById('timeInput').value;
+            const statusInput = document.getElementById('statusInput').value;
+
+            if (taskInput === '' || timeInput === '') {
+                alert('Please enter both task and time.');
+                return;
+            }
+
+            const table = document.getElementById('taskList');
+            const row = table.insertRow();
+
+            const taskCell = row.insertCell(0);
+            const timeCell = row.insertCell(1);
+            const statusCell = row.insertCell(2);
+            const actionCell = row.insertCell(3);
+
+            taskCell.innerText = taskInput;
+            timeCell.innerText = timeInput;
+            statusCell.innerText = statusInput;
+            actionCell.innerHTML = '<button onclick="deleteTask(this)">Delete</button>';
+
+            updateTotalTime();
+        }
+
+        function deleteTask(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            updateTotalTime();
+        }
+
+        function updateTotalTime() {
+            let totalMinutes = 0;
+            const times = document.querySelectorAll('#taskList td:nth-child(2)');
+            times.forEach((time) => {
+                const [hours, minutes] = time.innerText.split(':').map(Number);
+                totalMinutes += (hours * 60) + minutes;
+            });
+
+            const totalHours = Math.floor(totalMinutes / 60);
+            const remainingMinutes = totalMinutes % 60;
+            document.getElementById('totalTime').innerText = `${totalHours}:${remainingMinutes.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
