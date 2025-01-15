@@ -50,6 +50,14 @@
             padding: 10px;
             margin: 5px;
         }
+        .send-email {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .send-email input, .send-email button {
+            padding: 10px;
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +88,10 @@
         </div>
         <div class="total-time">
             <h3>Total Time: <span id="totalTime">0:00</span></h3>
+        </div>
+        <div class="send-email">
+            <input type="email" id="emailInput" placeholder="Enter email">
+            <button onclick="sendEmail()">Send Email</button>
         </div>
     </div>
 
@@ -137,6 +149,17 @@
             const totalHours = Math.floor(totalMinutes / 60);
             const remainingMinutes = totalMinutes % 60;
             document.getElementById('totalTime').innerText = `${totalHours}:${remainingMinutes.toString().padStart(2, '0')}`;
+        }
+
+        function sendEmail() {
+            const email = document.getElementById('emailInput').value;
+            if (email === '') {
+                alert('Please enter an email address.');
+                return;
+            }
+
+            alert('Email sent to ' + email + ' with the current task report.');
+            // Here you would add code to send the email using a backend service
         }
     </script>
 </body>
