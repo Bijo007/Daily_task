@@ -1,53 +1,65 @@
 const express = require('express');
+const simpleGit = require('simple-git');
 const nodemailer = require('nodemailer');
-const schedule = require('node-schedule');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware to parse JSON
+const git = simpleGit();
 app.use(express.json());
 
-// Simulated task data (in a real setup, you'd pull this from a database or frontend)
-let tasks = [
-  { task: 'Task 1', time: '09:00', status: 'Pending' },
-  { task: 'Task 2', time: '10:00', status: 'Completed' }
-];
+const EMAIL = 'your-email@example.com'; // The email you want to send data to
 
-// Route to get tasks (in a real app, you'd have more routes to add/remove tasks)
-app.get('/tasks', (req, res) => {
-  res.json(tasks);
-});
+// Endpoint to save task data and push to Git
+app.post('/save-task', async (req, res) => {
+    const { task, time, status } = req.body;
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-email-password'
-  }
-});
+    // Save task data in a file or database
+    const taskData = `Task: ${task}, Time: ${time}, Status: ${status}\n`;
 
-const sendEmail = () => {
-  const mailOptions = {
-    from: 'your-email@gmail.com',
-    to: 'bijo.james@verbat.com',
-    subject: 'Daily Task Report',
-    text: `Here is your daily task report:\n\n${tasks.map(task => `${task.task} - ${task.time} - ${task.status}`).join('\n')}`
-  };
+    try {
+        // Save to a local file (example: tasks.txt)
+        require('fs').appendFileSync('tasks.txt', taskData);
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
+        // Commit the changes to the Git repo
+        await git.add('./tasks.txt');
+        await git.commit('Added new task');
+        await git.push('origin', 'main');  // Assuming you have a remote repo set up
+
+        // Send email notification
+        sendEmailNotification(task, time, status);
+
+        res.status(200).json({ message: 'Task saved and email sent!' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Failed to save task or send email' });
     }
-  });
-};
+});
 
-// Schedule email every minute
-schedule.scheduleJob('*/1 * * * *', sendEmail);
+// Email notification function
+function sendEmailNotification(task, time, status) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', // or use another email provider
+        auth: {
+            user: 'your-email@example.com',
+            pass: 'your-email-password',  // or use OAuth2 for security
+        },
+    });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    const mailOptions = {
+        from: 'your-email@example.com',
+        to: EMAIL,
+        subject: 'New Task Added',
+        text: `Task: ${task}\nTime: ${time}\nStatus: ${status}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log('Error sending email:', error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
+}
+
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
 });
